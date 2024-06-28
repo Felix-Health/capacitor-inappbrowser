@@ -326,6 +326,7 @@ Reload the current web page.
 | **`toolbarColor`**                     | <code>string</code>                                             | toolbarColor: color of the toolbar in hex format                                                                                                                                  | <code>'#ffffff''</code>                                    | 1.2.5  |
 | **`showArrow`**                        | <code>boolean</code>                                            | showArrow: if true an arrow would be shown instead of cross for closing the window                                                                                                | <code>false</code>                                         | 1.2.5  |
 | **`ignoreUntrustedSSLError`**          | <code>boolean</code>                                            | ignoreUntrustedSSLError: if true, the webview will ignore untrusted SSL errors allowing the user to view the website.                                                             | <code>false</code>                                         | 6.1.0  |
+| **`modalTheme`**                       | <code>'light' \| 'dark' \| 'system'</code>                      | modalTheme: Theme for the modal, available themes are 'light' and 'dark', 'system'. default is 'system' Android only                                                              |                                                            |        |
 
 
 #### DisclaimerOptions

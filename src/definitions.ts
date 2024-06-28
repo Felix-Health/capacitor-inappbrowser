@@ -212,6 +212,13 @@ export interface OpenWebViewOptions {
    * @default false
    */
   ignoreUntrustedSSLError?: boolean;
+
+  /**
+   * modalTheme: Theme for the modal. Available options are 'light', 'dark' and 'system'. Android only.
+   * default is 'system'
+   * Android only
+   */
+  modalTheme?: "light" | "dark" | "system";
 }
 
 export interface InAppBrowserPlugin {

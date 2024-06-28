@@ -313,6 +313,18 @@ public class InAppBrowserPlugin
     } else {
       options.setCloseModal(false);
     }
+
+    options.setModalTheme(call.getString("modalTheme", "system"));
+
+    int modalTheme;
+    if (options.getModalTheme().equals("dark")) {
+      modalTheme = android.R.style.Theme_Black;
+    } else if (options.getModalTheme().equals("light")) {
+      modalTheme = android.R.style.Theme_Light;
+    } else {
+      modalTheme = android.R.style.Theme_Black;
+    }
+
     options.setPluginCall(call);
     //    options.getToolbarItemTypes().add(ToolbarItemType.RELOAD); TODO: fix this
     options.setCallbacks(
@@ -345,7 +357,7 @@ public class InAppBrowserPlugin
           public void run() {
             webViewDialog = new WebViewDialog(
               getContext(),
-              android.R.style.Theme_NoTitleBar,
+              modalTheme,
               options,
               InAppBrowserPlugin.this
             );

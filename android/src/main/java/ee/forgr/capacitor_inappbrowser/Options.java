@@ -25,6 +25,7 @@ public class Options {
   private String ToolbarColor;
   private boolean ShowArrow;
   private boolean ignoreUntrustedSSLError;
+  private String modalTheme;
 
   public PluginCall getPluginCall() {
     return pluginCall;
@@ -198,5 +199,13 @@ public class Options {
 
   public void setIgnoreUntrustedSSLError(boolean _ignoreUntrustedSSLError) {
     this.ignoreUntrustedSSLError = _ignoreUntrustedSSLError;
+  }
+
+  public String getModalTheme() {
+    return modalTheme;
+  }
+
+  public void setModalTheme(String modalTheme) {
+    this.modalTheme = modalTheme;
   }
 }
