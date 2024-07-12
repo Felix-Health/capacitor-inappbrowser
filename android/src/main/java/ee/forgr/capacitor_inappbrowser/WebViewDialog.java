@@ -243,7 +243,7 @@ public class WebViewDialog extends Dialog {
 //      Intent.createChooser(intent, "Select File"),
 //      FILE_CHOOSER_REQUEST_CODE
 //    );
-
+  Log.i("openFIleChooser", "cameraClicked");
     // Permission is not granted
     if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
       ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.CAMERA }, REQUEST_CAMERA_PERMISSION);
@@ -253,9 +253,12 @@ public class WebViewDialog extends Dialog {
       // Permission has already been granted
       Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
       File photo = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
-      mCapturedImageURI = Uri.fromFile(photo);
-      Log.i("mCapturedImageURI", "" + mCapturedImageURI);
-      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCapturedImageURI);
+      Uri photoURI = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", photo);
+      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+      // File photo = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
+      // mCapturedImageURI = Uri.fromFile(photo);
+      // Log.i("mCapturedImageURI", "" + mCapturedImageURI);
+      // cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCapturedImageURI);
 
       Intent i = new Intent(Intent.ACTION_GET_CONTENT);
       i.addCategory(Intent.CATEGORY_OPENABLE);
