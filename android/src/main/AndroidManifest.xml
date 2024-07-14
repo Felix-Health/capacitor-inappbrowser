@@ -12,18 +12,20 @@
   <uses-permission android:name="android.permission.CAMERA"/>
 
   <application>
-    <!-- <uses-library android:name="org.apache.http.legacy" android:required="false"/> -->
+    <uses-library android:name="org.apache.http.legacy" android:required="false"/>
     <provider
       android:name="androidx.core.content.FileProvider"
-      android:authorities="com.example.plugin.provider"
+      android:authorities="package.provider"
+      android:grantUriPermissions="true"
       android:exported="false"
-      android:grantUriPermissions="true">
+    >
       <meta-data
           android:name="android.support.FILE_PROVIDER_PATHS"
-          android:resource="@xml/file_paths"></meta-data>
+          android:resource="@xml/provider_paths">
+      </meta-data>
     </provider>
     <activity
-      android:name="com.example.lib.MainActivity"
+      android:name="package.MainActivity"
       android:label="LibMain"
       android:exported="true">
       <intent-filter>
@@ -32,4 +34,9 @@
       </intent-filter>
     </activity>
   </application>
+
+  <uses-permission android:name="android.permission.READ_CLIPBOARD"/>
+  <uses-permission android:name="android.permission.WRITE_CLIPBOARD"/>
+  <uses-permission android:name="android.permission.READ_CLIPS"/>
+  <uses-permission android:name="android.permission.WRITE_CLIPS"/>
 </manifest>

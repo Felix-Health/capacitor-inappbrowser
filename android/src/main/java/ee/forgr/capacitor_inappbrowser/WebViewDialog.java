@@ -66,13 +66,24 @@ public class WebViewDialog extends Dialog {
   public PermissionRequest currentPermissionRequest;
   public static final int FILE_CHOOSER_REQUEST_CODE = 1000;
   public static final int CAMERA_REQUEST_CODE = 1001;
+  public static final int FILECHOOSER_RESULTCODE = 2888;
   private static final int REQUEST_CAMERA_PERMISSION = 1;
   public ValueCallback<Uri> mUploadMessage;
   public ValueCallback<Uri[]> mFilePathCallback;
   private Uri mCapturedImageURI = null;
 
+  private PermissionResultCallback permissionResultCallback;
+
+  public void setPermissionResultCallback(PermissionResultCallback callback) {
+      this.permissionResultCallback = callback;
+  }
+
   public interface PermissionHandler {
     void handleCameraPermissionRequest(PermissionRequest request);
+  }
+
+  public interface PermissionResultCallback {
+    void onRequestPermissionsResult(String[] permissions, int[] grantResults);
   }
 
   private PermissionHandler permissionHandler;
@@ -246,29 +257,46 @@ public class WebViewDialog extends Dialog {
   Log.i("openFIleChooser", "cameraClicked");
     // Permission is not granted
     if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-      ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.CAMERA }, REQUEST_CAMERA_PERMISSION);
+      boolean test = onRequestPermissionsResult(new String[]{ Manifest.permission.CAMERA }, new int[]{ PackageManager.PERMISSION_GRANTED });
       Log.i("CAMERA", "Permission is not granted");
+      if (test == true) {
+        triggerPhotoOptions();
+        return;
+      }
     } else {
-      Log.i("CAMERA", "Permission is granted");
-      // Permission has already been granted
-      Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-      File photo = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
-      Uri photoURI = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", photo);
-      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-      // File photo = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
-      // mCapturedImageURI = Uri.fromFile(photo);
-      // Log.i("mCapturedImageURI", "" + mCapturedImageURI);
-      // cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCapturedImageURI);
-
-      Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-      i.addCategory(Intent.CATEGORY_OPENABLE);
-      i.setType("image/*");
-
-      Intent chooserIntent = Intent.createChooser(i, "Image Chooser");
-      chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Parcelable[] { cameraIntent });
-
-      activity.startActivityForResult(chooserIntent, 2888);
+      triggerPhotoOptions();
     }
+  }
+
+  public boolean onRequestPermissionsResult(String[] permissions, int[] grantResults) {
+    if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        // Permission was granted, you can perform the operation that requires this permission.
+        ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.CAMERA }, REQUEST_CAMERA_PERMISSION);
+        return true;
+    } else {
+        // Permission denied, you can disable the functionality that depends on this permission.
+        return false;
+    }
+  }
+
+  private void triggerPhotoOptions() {
+    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+    File photo = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
+    // Uri photoURI = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", photo);
+    mCapturedImageURI = Uri.fromFile(photo);
+    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCapturedImageURI);
+    // File photo = new File(Environment.getExternalStorageDirectory(), "temp.jpg");
+    // Log.i("mCapturedImageURI", "" + mCapturedImageURI);
+    // cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCapturedImageURI);
+
+    Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+    i.addCategory(Intent.CATEGORY_OPENABLE);
+    i.setType("image/*");
+
+    Intent chooserIntent = Intent.createChooser(i, "Image Chooser");
+    chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Parcelable[] { cameraIntent });
+
+    activity.startActivityForResult(chooserIntent, FILECHOOSER_RESULTCODE);
   }
 
   public void reload() {
