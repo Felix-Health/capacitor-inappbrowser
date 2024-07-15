@@ -30,6 +30,9 @@ import com.getcapacitor.annotation.PermissionCallback;
 import java.lang.reflect.Array;
 import java.util.Iterator;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 @CapacitorPlugin(
   name = "InAppBrowser",
   permissions = {
@@ -56,6 +59,8 @@ public class InAppBrowserPlugin
   private String currentUrl = "";
 
   private PermissionRequest currentPermissionRequest;
+
+  private static final int REQUEST_CAMERA_PERMISSION = 1;
 
   public void handleCameraPermissionRequest(PermissionRequest request) {
     this.currentPermissionRequest = request;
@@ -91,8 +96,14 @@ public class InAppBrowserPlugin
         Uri[] results = null;
 
         if (resultCode == Activity.RESULT_OK) {
-          if (data != null) {
+          if (data != null && data.getData() != null) {
+            // User picked an image from the gallery
             results = new Uri[] { data.getData() };
+          } else if (WebViewDialog.capturedImageUri != null) {
+            // Image was captured by the camera
+            results = new Uri[] { WebViewDialog.capturedImageUri };
+            // Reset the static variable
+            WebViewDialog.capturedImageUri = null;
           }
         }
 
@@ -391,6 +402,8 @@ public class InAppBrowserPlugin
         new Runnable() {
           @Override
           public void run() {
+            // Check if the user has granted the permissions
+            checkCameraPermission(InAppBrowserPlugin.this.getActivity());
             webViewDialog = new WebViewDialog(
               getContext(),
               useWhitePanelMode ? lightPanelTheme : defaultTheme,
@@ -519,5 +532,11 @@ public class InAppBrowserPlugin
       );
     }
     return currentSession;
+  }
+
+  private void checkCameraPermission(Activity activity) {
+    if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+      ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.CAMERA }, REQUEST_CAMERA_PERMISSION);
+    }
   }
 }
