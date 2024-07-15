@@ -66,14 +66,25 @@ public class InAppBrowserPlugin
     }
   }
 
+  public void handleStoragePermissionRequest(PermissionRequest request) {
+    this.currentPermissionRequest = request;
+    if (getPermissionState("storage") != PermissionState.GRANTED) {
+      requestPermissionForAlias("storage", null, "storagePermissionCallback");
+    } else {
+      grantStoragePermission();
+    }
+  }
+
   @Override
   protected void handleOnActivityResult(
     int requestCode,
     int resultCode,
     Intent data
   ) {
-    super.handleOnActivityResult(requestCode, resultCode, data);
-
+    if(requestCode != WebViewDialog.FILE_CHOOSER_REQUEST_CODE || webViewDialog.mFilePathCallback == null) {
+      super.handleOnActivityResult(requestCode, resultCode, data);
+      return;
+    }
     // Check if the request code matches the file chooser request code
     if (requestCode == WebViewDialog.FILE_CHOOSER_REQUEST_CODE) {
       if (webViewDialog != null && webViewDialog.mFilePathCallback != null) {
@@ -109,10 +120,31 @@ public class InAppBrowserPlugin
     }
   }
 
+  @PermissionCallback
+  private void storagePermissionCallback() {
+    if (getPermissionState("storage") == PermissionState.GRANTED) {
+      grantStoragePermission();
+    } else {
+      if (currentPermissionRequest != null) {
+        currentPermissionRequest.deny();
+        currentPermissionRequest = null;
+      }
+      // Handle the case where permission was not granted
+    }
+  }
+
   private void grantCameraPermission() {
     if (currentPermissionRequest != null) {
       currentPermissionRequest.grant(
         new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE }
+      );
+      currentPermissionRequest = null;
+    }
+  }
+  private void grantStoragePermission() {
+    if (currentPermissionRequest != null) {
+      currentPermissionRequest.grant(
+        new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE }
       );
       currentPermissionRequest = null;
     }
