@@ -12,6 +12,9 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -29,10 +32,18 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Toolbar;
+
+import androidx.core.content.FileProvider;
+
 import com.getcapacitor.JSArray;
+
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -50,6 +61,7 @@ public class WebViewDialog extends Dialog {
   public static final int FILE_CHOOSER_REQUEST_CODE = 1000;
   public ValueCallback<Uri> mUploadMessage;
   public ValueCallback<Uri[]> mFilePathCallback;
+  private static final int FILE_CHOOSER_RESULT_CODE = 1002;
 
   public interface PermissionHandler {
     void handleCameraPermissionRequest(PermissionRequest request);
@@ -136,11 +148,62 @@ public class WebViewDialog extends Dialog {
           ValueCallback<Uri[]> filePathCallback,
           WebChromeClient.FileChooserParams fileChooserParams
         ) {
-          openFileChooser(
-            filePathCallback,
-            fileChooserParams.getAcceptTypes()[0]
-          );
+          // Intent for picking a file from the file system
+          Intent contentSelectionIntent = new Intent(Intent.ACTION_GET_CONTENT);
+          contentSelectionIntent.addCategory(Intent.CATEGORY_OPENABLE);
+          contentSelectionIntent.setType(fileChooserParams.getAcceptTypes()[0]);
+
+          // Intent for capturing a photo
+          Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+          if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
+            // Ensure there's a camera activity to handle the intent
+            File photoFile = null;
+            try {
+              photoFile = createImageFile(); // Method to create a temporary file
+            } catch (IOException ex) {
+              // Error occurred while creating the File
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(getContext(),
+                    getContext().getPackageName() + ".fileprovider",
+                    photoFile);
+              takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+            }
+          }
+
+          Intent[] intentArray;
+          if (takePictureIntent != null) {
+            intentArray = new Intent[]{takePictureIntent};
+          } else {
+            intentArray = new Intent[0];
+          }
+
+          Intent chooserIntent = new Intent(Intent.ACTION_CHOOSER);
+          chooserIntent.putExtra(Intent.EXTRA_INTENT, contentSelectionIntent);
+          chooserIntent.putExtra(Intent.EXTRA_TITLE, "Choose an action");
+          chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intentArray);
+
+          activity.startActivityForResult(chooserIntent, FILE_CHOOSER_RESULT_CODE);
           return true;
+        }
+
+              // Method to create a temporary file for the photo
+        private File createImageFile() throws IOException {
+          // Create an image file name
+          String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+          String imageFileName = "JPEG_" + timeStamp + "_";
+          File storageDir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+          File image = File.createTempFile(
+              imageFileName,  /* prefix */
+              ".jpg",         /* suffix */
+              storageDir      /* directory */
+          );
+
+          // Save a file: path for use with ACTION_VIEW intents
+          String mCurrentPhotoPath = image.getAbsolutePath();
+          Log.i("FILEPICKER", mCurrentPhotoPath);
+          return image;
         }
 
         // Grant permissions for cam
