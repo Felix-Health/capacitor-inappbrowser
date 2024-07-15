@@ -12,7 +12,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.net.http.SslError;
-import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.TextUtils;
@@ -34,8 +33,6 @@ import android.widget.Toast;
 import android.widget.Toolbar;
 
 import androidx.core.content.FileProvider;
-
-import com.getcapacitor.JSArray;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,7 +58,7 @@ public class WebViewDialog extends Dialog {
   public static final int FILE_CHOOSER_REQUEST_CODE = 1000;
   public ValueCallback<Uri> mUploadMessage;
   public ValueCallback<Uri[]> mFilePathCallback;
-  private static final int FILE_CHOOSER_RESULT_CODE = 1002;
+  public static Uri capturedImageUri = null;
 
   public interface PermissionHandler {
     void handleCameraPermissionRequest(PermissionRequest request);
@@ -148,6 +145,7 @@ public class WebViewDialog extends Dialog {
           ValueCallback<Uri[]> filePathCallback,
           WebChromeClient.FileChooserParams fileChooserParams
         ) {
+          mFilePathCallback = filePathCallback;
           // Intent for picking a file from the file system
           Intent contentSelectionIntent = new Intent(Intent.ACTION_GET_CONTENT);
           contentSelectionIntent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -168,6 +166,7 @@ public class WebViewDialog extends Dialog {
                 Uri photoURI = FileProvider.getUriForFile(getContext(),
                     getContext().getPackageName() + ".fileprovider",
                     photoFile);
+              capturedImageUri = photoURI;
               takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
             }
           }
@@ -184,7 +183,7 @@ public class WebViewDialog extends Dialog {
           chooserIntent.putExtra(Intent.EXTRA_TITLE, "Choose an action");
           chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intentArray);
 
-          activity.startActivityForResult(chooserIntent, FILE_CHOOSER_RESULT_CODE);
+          activity.startActivityForResult(chooserIntent, FILE_CHOOSER_REQUEST_CODE);
           return true;
         }
 
@@ -272,20 +271,6 @@ public class WebViewDialog extends Dialog {
       show();
       _options.getPluginCall().resolve();
     }
-  }
-
-  private void openFileChooser(
-    ValueCallback<Uri[]> filePathCallback,
-    String acceptType
-  ) {
-    mFilePathCallback = filePathCallback;
-    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-    intent.addCategory(Intent.CATEGORY_OPENABLE);
-    intent.setType(acceptType); // Default to */*
-    activity.startActivityForResult(
-      Intent.createChooser(intent, "Select File"),
-      FILE_CHOOSER_REQUEST_CODE
-    );
   }
 
   public void reload() {

@@ -74,14 +74,19 @@ public class InAppBrowserPlugin
   ) {
     super.handleOnActivityResult(requestCode, resultCode, data);
 
-    // Check if the request code matches the file chooser request code
     if (requestCode == WebViewDialog.FILE_CHOOSER_REQUEST_CODE) {
       if (webViewDialog != null && webViewDialog.mFilePathCallback != null) {
         Uri[] results = null;
 
         if (resultCode == Activity.RESULT_OK) {
-          if (data != null) {
+          if (data != null && data.getData() != null) {
+            // User picked an image from the gallery
             results = new Uri[] { data.getData() };
+          } else if (WebViewDialog.capturedImageUri != null) {
+            // Image was captured by the camera
+            results = new Uri[] { WebViewDialog.capturedImageUri };
+            // Reset the static variable
+            WebViewDialog.capturedImageUri = null;
           }
         }
 
@@ -447,7 +452,7 @@ public class InAppBrowserPlugin
     JSObject headersProvided = pluginCall.getObject("headers");
     Bundle headers = new Bundle();
     if (headersProvided != null) {
-      Iterator<String> keys = headersProvided.keys();
+        Iterator<String> keys = headersProvided.keys();
       while (keys.hasNext()) {
         String key = keys.next();
         headers.putString(key, headersProvided.getString(key));
